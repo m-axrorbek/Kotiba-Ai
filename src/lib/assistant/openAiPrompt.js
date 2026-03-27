@@ -12,6 +12,7 @@ RULES
 - Never hallucinate.
 - intent must be "reminder" for reminder requests.
 - title must be 1-2 short Uzbek words.
+- title must stay faithful to the user's real task and must not invent unrelated words.
 - Clean spelling mistakes.
 - Normalize numbers.
 - If user says a relative delay like "2 minutdan keyin" or "1 soatdan keyin", set datetime to the exact future time from Current time and set notify_before to 0.
@@ -19,6 +20,8 @@ RULES
 - If user gives only an absolute date/time and does not say "oldin eslat", default notify_before must be 0.
 - If time is missing and there is no relative delay, default time is 09:00.
 - message must be short, natural, and TTS-friendly.
+- Preserve the user's meaning exactly. Do not change "kino ko'rish" into another task.
+- Prefer using the user's corrected transcript wording as the basis of the reminder.
 
 GOOD EXAMPLES
 Input: ertaga soat 5 da uchrashuv bor 10 minut oldin eslat
@@ -77,3 +80,4 @@ export const normalizeReminderPayload = (payload) => {
     message: String(payload.message || "").trim() || `${String(payload.title).trim()} vaqti keldi`
   };
 };
+

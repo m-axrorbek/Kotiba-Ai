@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Textarea } from "./ui/textarea";
 import { transcribeAudio, hasUzbekVoiceKey } from "../lib/uzbekVoice";
 import { cleanUzbekInput } from "../lib/cleaner";
+import { warmupAudioPlayback } from "../lib/voice";
 
 const VoiceInput = ({ value, onChange, onSendText, variant = "default" }) => {
   const { t } = useTranslation();
@@ -125,6 +126,7 @@ const VoiceInput = ({ value, onChange, onSendText, variant = "default" }) => {
     try {
       setVoiceError("");
       setStatusText("");
+      await warmupAudioPlayback();
       resetAudio();
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -262,6 +264,7 @@ const VoiceInput = ({ value, onChange, onSendText, variant = "default" }) => {
     setStatusText("Tahrirlangan matn yuborilmoqda...");
 
     try {
+      await warmupAudioPlayback();
       setTranscriptPreview(cleaned);
       onChange?.(cleaned);
       await onSendText(cleaned);
@@ -484,3 +487,4 @@ const resolveVoiceError = (error, hasBrowserFallback) => {
 };
 
 export default VoiceInput;
+

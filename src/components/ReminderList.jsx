@@ -84,6 +84,11 @@ const ReminderList = () => {
                     >
                       {reminder.title}
                     </p>
+                    {reminder.sourceText ? (
+                      <p className="max-w-[34rem] text-sm text-ink-500 dark:text-ink-400">
+                        {reminder.sourceText}
+                      </p>
+                    ) : null}
                     <div className="flex flex-wrap items-center gap-3 text-xs font-medium">
                       <div className="flex items-center gap-1.5 rounded-full bg-ink-100 px-2.5 py-1 text-ink-600 dark:bg-ink-900 dark:text-ink-300">
                         <Clock className="h-3.5 w-3.5" />

@@ -1,4 +1,9 @@
 let activeAudio = null;
+let audioUnlocked = false;
+let pendingSource = null;
+
+const SILENT_AUDIO =
+  "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
 
 const stopActiveAudio = () => {
   if (!activeAudio) {
@@ -13,6 +18,45 @@ const stopActiveAudio = () => {
   activeAudio = null;
 };
 
+export const warmupAudioPlayback = async () => {
+  if (audioUnlocked) {
+    return true;
+  }
+
+  const audio = new Audio(SILENT_AUDIO);
+  audio.muted = true;
+
+  try {
+    await audio.play();
+    audio.pause();
+    audio.currentTime = 0;
+    audioUnlocked = true;
+    return true;
+  } catch (_error) {
+    return false;
+  }
+};
+
+const bindUnlockListeners = () => {
+  const unlock = async () => {
+    try {
+      await warmupAudioPlayback();
+
+      if (pendingSource) {
+        const source = pendingSource;
+        pendingSource = null;
+        await playAudioSource(source);
+      }
+    } catch (_error) {
+      // Wait for the next user interaction.
+    }
+  };
+
+  window.addEventListener("pointerdown", unlock, { once: true });
+  window.addEventListener("keydown", unlock, { once: true });
+  window.addEventListener("touchstart", unlock, { once: true });
+};
+
 export const playAudioSource = async (source) => {
   if (!source) {
     return false;
@@ -22,6 +66,7 @@ export const playAudioSource = async (source) => {
   window.speechSynthesis?.cancel?.();
 
   const audio = new Audio();
+  audio.preload = "auto";
   if (typeof source === "string") {
     audio.src = source;
   } else {
@@ -31,7 +76,14 @@ export const playAudioSource = async (source) => {
 
   activeAudio = audio;
 
-  await audio.play();
+  try {
+    await audio.play();
+    audioUnlocked = true;
+  } catch (error) {
+    pendingSource = source;
+    bindUnlockListeners();
+    throw error;
+  }
 
   audio.onended = () => {
     if (audio.dataset.objectUrl === "true") {

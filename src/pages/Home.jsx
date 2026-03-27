@@ -40,7 +40,11 @@ const Home = () => {
         return;
       }
 
-      const reminders = parsedReminders.map((draft) => mapDraftToReminder(draft));
+      const reminders = parsedReminders.map((draft) =>
+        mapDraftToReminder(draft, {
+          sourceText: cleaned
+        })
+      );
       addReminders(reminders);
       setInput("");
 
@@ -122,7 +126,7 @@ const resolveReminderDrafts = async (text) => {
   return parseUzbekText(text);
 };
 
-const mapDraftToReminder = (draft) => ({
+const mapDraftToReminder = (draft, meta = {}) => ({
   id: uuid(),
   type: "reminder",
   title: draft.title,
@@ -130,6 +134,7 @@ const mapDraftToReminder = (draft) => ({
   notifyBefore: draft.notify_before ?? draft.notifyBefore ?? 0,
   recurrence: draft.recurrence ?? "none",
   message: draft.message,
+  sourceText: String(meta.sourceText || draft.source_text || "").trim(),
   createdAt: new Date().toISOString(),
   notified: false,
   completed: false
