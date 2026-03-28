@@ -17,6 +17,21 @@ import { useReminderStore } from "../store/useReminderStore";
 import { isToday } from "../lib/time";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 
+const tooltipProps = {
+  contentStyle: {
+    background: "var(--tooltip-bg)",
+    border: "1px solid var(--tooltip-border)",
+    borderRadius: "12px",
+    color: "var(--tooltip-text)"
+  },
+  itemStyle: {
+    color: "var(--tooltip-text)"
+  },
+  labelStyle: {
+    color: "var(--tooltip-text)"
+  }
+};
+
 const Analytics = () => {
   const { t } = useTranslation();
   const reminders = useReminderStore((state) => state.reminders);
@@ -51,12 +66,12 @@ const Analytics = () => {
       <Card className="border-dashed bg-transparent dark:border-ink-700">
         <CardContent className="flex flex-col items-center justify-center py-20 text-center">
           <div className="rounded-full bg-ink-100 p-4 dark:bg-ink-800">
-            <CalendarDays className="h-7 w-7 text-ink-500 dark:text-ink-400" />
+            <CalendarDays className="h-7 w-7 text-ink-500 dark:text-ink-300" />
           </div>
           <p className="mt-5 text-xl font-semibold text-ink-950 dark:text-ink-50">
             {t("analyticsEmptyTitle")}
           </p>
-          <p className="mt-2 max-w-sm text-sm text-ink-500 dark:text-ink-400">
+          <p className="mt-2 max-w-sm text-sm text-ink-500 dark:text-ink-300">
             {t("analyticsEmptyHint")}
           </p>
         </CardContent>
@@ -73,7 +88,7 @@ const Analytics = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr,0.7fr]">
-        <Card>
+        <Card className="dark:bg-ink-900/95">
           <CardHeader>
             <CardTitle className="section-title">{t("weeklyChart")}</CardTitle>
           </CardHeader>
@@ -89,25 +104,23 @@ const Analytics = () => {
                   angle={-18}
                   textAnchor="end"
                   height={52}
-                  tick={{ fontSize: 14, fontWeight: 600 }}
+                  tick={{ fontSize: 14, fontWeight: 600, fill: "var(--chart-axis)" }}
                 />
-                <YAxis allowDecimals={false} stroke="var(--chart-axis)" tickLine={false} axisLine={false} />
-                <Tooltip
-                  cursor={{ fill: "rgba(17, 17, 17, 0.08)" }}
-                  contentStyle={{
-                    background: "var(--tooltip-bg)",
-                    border: "1px solid var(--tooltip-border)",
-                    borderRadius: "12px",
-                    color: "var(--tooltip-text)"
-                  }}
+                <YAxis
+                  allowDecimals={false}
+                  stroke="var(--chart-axis)"
+                  tickLine={false}
+                  axisLine={false}
+                  tick={{ fill: "var(--chart-axis)" }}
                 />
+                <Tooltip cursor={{ fill: "rgba(127, 127, 127, 0.12)" }} {...tooltipProps} />
                 <Bar dataKey="tasks" fill="var(--chart-bar)" radius={[10, 10, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-ink-900/95">
           <CardHeader>
             <CardTitle className="section-title">{t("pieChart")}</CardTitle>
           </CardHeader>
@@ -115,14 +128,7 @@ const Analytics = () => {
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Tooltip
-                    contentStyle={{
-                      background: "var(--tooltip-bg)",
-                      border: "1px solid var(--tooltip-border)",
-                      borderRadius: "12px",
-                      color: "var(--tooltip-text)"
-                    }}
-                  />
+                  <Tooltip {...tooltipProps} />
                   <Pie
                     data={stats.pieData}
                     dataKey="value"
@@ -139,9 +145,9 @@ const Analytics = () => {
               </ResponsiveContainer>
             </div>
 
-            <div className="grid gap-2 text-sm text-ink-700 dark:text-ink-200">
+            <div className="grid gap-2 text-sm text-ink-700 dark:text-ink-100">
               {stats.pieData.map((entry) => (
-                <div key={entry.name} className="flex items-center justify-between rounded-2xl bg-ink-50 px-3 py-2 dark:bg-ink-800/80">
+                <div key={entry.name} className="flex items-center justify-between rounded-2xl bg-ink-50 px-3 py-2 dark:bg-ink-800/90">
                   <div className="flex items-center gap-2">
                     <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
                     <span>{entry.name}</span>
@@ -157,7 +163,7 @@ const Analytics = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
+        <Card className="dark:bg-ink-900/95">
           <CardHeader>
             <CardTitle className="section-title">{t("dailyTimeline")}</CardTitle>
           </CardHeader>
@@ -165,13 +171,13 @@ const Analytics = () => {
             {stats.todayReminders.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-ink-200 px-4 py-8 text-center dark:border-ink-700">
                 <p className="text-base font-medium text-ink-900 dark:text-ink-100">{t("analyticsEmptyTitle")}</p>
-                <p className="mt-1 text-sm text-ink-500 dark:text-ink-400">{t("analyticsEmptyHint")}</p>
+                <p className="mt-1 text-sm text-ink-500 dark:text-ink-300">{t("analyticsEmptyHint")}</p>
               </div>
             ) : (
               <div className="space-y-3">
                 {stats.todayReminders.map((reminder) => (
-                  <div key={reminder.id} className="flex items-center gap-4 rounded-2xl bg-ink-50 px-3 py-3 dark:bg-ink-800/70">
-                    <div className="flex h-10 w-20 items-center justify-center rounded-full bg-white text-sm font-semibold text-ink-700 dark:bg-ink-900 dark:text-ink-100">
+                  <div key={reminder.id} className="flex items-center gap-4 rounded-2xl bg-ink-50 px-3 py-3 dark:bg-ink-800/80">
+                    <div className="flex h-10 w-20 items-center justify-center rounded-full bg-white text-sm font-semibold text-ink-700 dark:bg-ink-950 dark:text-ink-50">
                       {format(parseISO(reminder.datetime), "HH:mm")}
                     </div>
                     <div>
@@ -184,7 +190,7 @@ const Analytics = () => {
                       >
                         {reminder.title}
                       </p>
-                      <p className="text-xs text-ink-500 dark:text-ink-400">
+                      <p className="text-xs text-ink-500 dark:text-ink-300">
                         {reminder.completed ? t("completed") : t("pending")}
                       </p>
                     </div>
@@ -195,17 +201,17 @@ const Analytics = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-ink-900/95">
           <CardHeader>
             <CardTitle className="section-title">{t("aiSummary")}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="rounded-3xl bg-ink-50 p-5 dark:bg-ink-800/70">
+            <div className="rounded-3xl bg-ink-50 p-5 dark:bg-ink-800/90">
               <div className="mb-3 flex items-center gap-2 text-ink-900 dark:text-ink-100">
                 <BarChart3 className="h-4 w-4" />
                 <span className="text-sm font-semibold">{t("analyticsOverview")}</span>
               </div>
-              <p className="text-base text-ink-700 dark:text-ink-200">{stats.summary}</p>
+              <p className="text-base text-ink-700 dark:text-ink-100">{stats.summary}</p>
             </div>
           </CardContent>
         </Card>
@@ -215,9 +221,9 @@ const Analytics = () => {
 };
 
 const StatCard = ({ title, value }) => (
-  <Card>
+  <Card className="dark:bg-ink-900/95">
     <CardContent className="space-y-2 px-5 py-5">
-      <p className="text-sm text-ink-500 dark:text-ink-400">{title}</p>
+      <p className="text-sm text-ink-500 dark:text-ink-300">{title}</p>
       <p className="section-title text-3xl font-semibold text-ink-950 dark:text-ink-50">{value}</p>
     </CardContent>
   </Card>

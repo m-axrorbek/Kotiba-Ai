@@ -23,18 +23,26 @@ const months = {
   dekabr: 11
 };
 
-export const extractDateTime = (text) => {
+const RELATIVE_DELAY_REGEX = /(\d{1,3})\s*(minut|daqiqa|daq|soat|kun)\s*(dan)?\s*(keyin|so'ng|song)/i;
+
+export const extractDateTime = (text) => extractDateTimeDetails(text).datetime;
+
+export const extractDateTimeDetails = (text) => {
   const now = new Date();
   const relativeDateTime = resolveRelativeDateTime(text, now);
 
   if (relativeDateTime) {
-    return relativeDateTime.toISOString();
+    return {
+      datetime: relativeDateTime.toISOString(),
+      timeFound: true,
+      timeNeedsReview: false,
+      usedDefaultTime: false
+    };
   }
 
   const time = resolveTime(text);
   const date = resolveDate(text, now, time);
-
-  return new Date(
+  const finalDate = new Date(
     date.getFullYear(),
     date.getMonth(),
     date.getDate(),
@@ -42,11 +50,18 @@ export const extractDateTime = (text) => {
     time.minute,
     0,
     0
-  ).toISOString();
+  );
+
+  return {
+    datetime: finalDate.toISOString(),
+    timeFound: time.found,
+    timeNeedsReview: !time.found,
+    usedDefaultTime: !time.found
+  };
 };
 
 const resolveRelativeDateTime = (text, now) => {
-  const match = text.match(/(\d{1,3})\s*(minut|daqiqa|daq|soat|kun)\s*(dan)?\s*(keyin|so'ng|song)/i);
+  const match = text.match(RELATIVE_DELAY_REGEX);
   if (!match) {
     return null;
   }
@@ -131,30 +146,34 @@ const resolveWeekDayDate = (text, now) => {
 };
 
 const resolveTime = (text) => {
-  const timeWithLabel = text.match(/soat\s*(\d{1,2})(?::|\.)(\d{2})/i);
-  if (timeWithLabel) {
-    return safeTime(Number.parseInt(timeWithLabel[1], 10), Number.parseInt(timeWithLabel[2], 10), text);
+  const patterns = [
+    /soat\s*(\d{1,2})(?::|\.)(\d{2})/i,
+    /\b(\d{1,2}):(\d{2})(?:\s*(?:da|ga))?\b/i,
+    /\b(\d{1,2})\s+(\d{2})(?:\s*(?:da|ga))\b/i,
+    /\b(\d{1,2})(\d{2})(?:\s*(?:da|ga))\b/i
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+    if (match) {
+      return safeTime(Number.parseInt(match[1], 10), Number.parseInt(match[2], 10), text, true);
+    }
   }
 
-  const simpleClock = text.match(/\b(\d{1,2}):(\d{2})(?:\s*(da|ga))?\b/);
-  if (simpleClock) {
-    return safeTime(Number.parseInt(simpleClock[1], 10), Number.parseInt(simpleClock[2], 10), text);
-  }
-
-  const hourWithLabel = text.match(/soat\s*(\d{1,2})\b/i);
+  const hourWithLabel = text.match(/soat\s*(\d{1,2})\s*(?:da|ga)?\b/i);
   if (hourWithLabel) {
-    return safeTime(Number.parseInt(hourWithLabel[1], 10), 0, text);
+    return safeTime(Number.parseInt(hourWithLabel[1], 10), 0, text, true);
   }
 
-  const shortHour = text.match(/(?<!:)\b(\d{1,2})\s*(da|ga)\b/);
-  if (shortHour && !/(minut|daqiqa|daq|soat)\s*(dan)?\s*(keyin|so'ng|song)/i.test(text)) {
-    return safeTime(Number.parseInt(shortHour[1], 10), 0, text);
+  const shortHour = text.match(/(?<!:)\b(\d{1,2})\s*(da|ga)\b/i);
+  if (shortHour && !RELATIVE_DELAY_REGEX.test(text)) {
+    return safeTime(Number.parseInt(shortHour[1], 10), 0, text, true);
   }
 
-  return { hour: 9, minute: 0 };
+  return { hour: 9, minute: 0, found: false };
 };
 
-const safeTime = (hour, minute, text) => {
+const safeTime = (hour, minute, text, found) => {
   let resolvedHour = hour;
   const resolvedMinute = Number.isNaN(minute) ? 0 : minute;
 
@@ -164,15 +183,15 @@ const safeTime = (hour, minute, text) => {
     }
   }
 
-  if (Number.isNaN(resolvedHour) || resolvedHour > 23) {
-    return { hour: 9, minute: 0 };
+  if (Number.isNaN(resolvedHour) || resolvedHour < 0 || resolvedHour > 23) {
+    return { hour: 9, minute: 0, found: false };
   }
 
-  if (resolvedMinute > 59) {
-    return { hour: resolvedHour, minute: 0 };
+  if (resolvedMinute < 0 || resolvedMinute > 59) {
+    return { hour: resolvedHour, minute: 0, found: false };
   }
 
-  return { hour: resolvedHour, minute: resolvedMinute };
+  return { hour: resolvedHour, minute: resolvedMinute, found };
 };
 
 const buildDateFromOffset = (now, offset) => {

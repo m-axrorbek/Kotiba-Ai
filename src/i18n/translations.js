@@ -25,6 +25,7 @@ export const translations = {
       lolaTipBody: "Vaqti kelganda eslatma qisqa va tabiiy ovoz bilan o'qiladi.",
       parseWithAI: "AI tahlil qilmoqda",
       parseFailed: "Gapni eslatmaga aylantirib bo'lmadi. Qayta aytib ko'ring.",
+      timeReviewRequired: "Vaqt aniq topilmadi. Iltimos, soatni tekshirib to'g'rilang va yana yuboring.",
       reminderReady: "{{title}} bor",
       reminderCreatedVoice: "{{title}} eslatmasi {{datetime}} ga qo'shildi.",
       remindersCreatedVoice: "{{count}} ta eslatma qo'shildi. {{titles}}.",

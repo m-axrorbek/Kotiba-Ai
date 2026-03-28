@@ -40,6 +40,12 @@ const Home = () => {
         return;
       }
 
+      if (parsedReminders.some((draft) => draft.time_needs_review)) {
+        setInput(cleaned);
+        setError("TIME_REVIEW_REQUIRED");
+        return;
+      }
+
       const reminders = parsedReminders.map((draft) =>
         mapDraftToReminder(draft, {
           sourceText: cleaned
@@ -71,13 +77,13 @@ const Home = () => {
       <Card className="overflow-hidden border-0 bg-gradient-to-b from-ink-50 to-white shadow-soft dark:from-ink-900 dark:to-ink-950">
         <CardContent className="space-y-6 px-5 py-6 sm:px-7">
           <div className="space-y-2 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-ink-500 dark:text-ink-400">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-ink-500 dark:text-ink-300">
               {t("voiceAssistant")}
             </p>
             <h1 className="section-title text-2xl font-semibold text-ink-950 dark:text-ink-50">
               {t("voiceHeroTitle")}
             </h1>
-            <p className="mx-auto max-w-md text-sm text-ink-600 dark:text-ink-300">
+            <p className="mx-auto max-w-md text-sm text-ink-600 dark:text-ink-200">
               {t("voiceHeroHint")}
             </p>
           </div>
@@ -105,7 +111,7 @@ const Home = () => {
         </CardContent>
       </Card>
 
-      {error ? <p className="text-sm text-ink-700 dark:text-ink-300">{t("parseFailed")}</p> : null}
+      {error ? <p className="text-sm text-ink-700 dark:text-ink-300">{error === "TIME_REVIEW_REQUIRED" ? t("timeReviewRequired") : t("parseFailed")}</p> : null}
       {isParsing ? <p className="text-xs text-ink-500 dark:text-ink-400">{t("parseWithAI")}...</p> : null}
 
       <ReminderList />
@@ -114,17 +120,33 @@ const Home = () => {
 };
 
 const resolveReminderDrafts = async (text) => {
+  const localDrafts = parseUzbekText(text);
+  const localDraft = localDrafts[0] || null;
+
   try {
     const analyzed = await assistantApi.analyze(text);
     if (analyzed?.intent === "reminder") {
-      return [analyzed];
+      return [mergeReminderDrafts(analyzed, localDraft)];
     }
   } catch (_error) {
     // Local parser is the stable fallback.
   }
 
-  return parseUzbekText(text);
+  return localDrafts;
 };
+
+const mergeReminderDrafts = (aiDraft, localDraft) => ({
+  type: "reminder",
+  title: aiDraft.title || localDraft?.title || "eslatma",
+  datetime: localDraft?.datetime || aiDraft.datetime,
+  notify_before: localDraft?.notify_before ?? aiDraft.notify_before ?? 0,
+  recurrence: localDraft?.recurrence || aiDraft.recurrence || "none",
+  message: aiDraft.message || localDraft?.message || `${aiDraft.title || localDraft?.title || "eslatma"} vaqti keldi`,
+  source_text: aiDraft.source_text || localDraft?.source_text || "",
+  time_found: localDraft?.time_found ?? aiDraft.time_found ?? true,
+  time_needs_review: localDraft?.time_needs_review ?? aiDraft.time_needs_review ?? false,
+  used_default_time: localDraft?.used_default_time ?? aiDraft.used_default_time ?? false
+});
 
 const mapDraftToReminder = (draft, meta = {}) => ({
   id: uuid(),

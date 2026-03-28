@@ -64,7 +64,7 @@ export const cleanUzbekInput = (input) => {
 
   let cleaned = input
     .toLowerCase()
-    .replace(/[‘’`]/g, "'")
+    .replace(/[ï¿½ï¿½`]/g, "'")
     .trim();
 
   for (const [pattern, replacement] of WORD_NORMALIZATIONS) {
@@ -131,6 +131,15 @@ export const cleanUzbekInput = (input) => {
 
   cleaned = resultTokens.join(" ");
   cleaned = cleaned.replace(/\bsoat\s+(\d{1,2})\s+(\d{2})\b/g, "soat $1:$2");
+  cleaned = cleaned.replace(/\b(\d{1,2})\s+(\d{2})(?=\s*(?:da|ga)\b)/g, "$1:$2");
+  cleaned = cleaned.replace(/\b(\d{1,2})(\d{2})(?=\s*(?:da|ga)\b)/g, (_, hour, minute) => {
+    const h = Number.parseInt(hour, 10);
+    const m = Number.parseInt(minute, 10);
+    if (Number.isNaN(h) || Number.isNaN(m) || h > 23 || m > 59) {
+      return `${hour}${minute}`;
+    }
+    return `${hour}:${minute}`;
+  });
   cleaned = cleaned.replace(/(\d+)\s*(da|ga)/g, "$1$2");
   cleaned = normalizeAmountUnits(cleaned);
   cleaned = cleaned.replace(/\s{2,}/g, " ").trim();

@@ -1,5 +1,5 @@
 import { cleanAssistantInput } from "./clean.js";
-import { extractDateTime } from "./datetime.js";
+import { extractDateTimeDetails } from "./datetime.js";
 
 const DEFAULT_NOTIFY_BEFORE = 0;
 const RELATIVE_DELAY_REGEX = /(\d{1,3})\s*(minut|daqiqa|daq|soat|kun)\s*(dan)?\s*(keyin|so'ng|song)/i;
@@ -68,14 +68,17 @@ const buildReminderPayload = (cleaned) => {
   const isRelative = RELATIVE_DELAY_REGEX.test(cleaned);
   const notifyBefore = isRelative ? 0 : extractNotifyBefore(cleaned);
   const title = extractReminderTitle(cleaned);
-  const datetime = extractDateTime(cleaned);
+  const dateTimeDetails = extractDateTimeDetails(cleaned);
 
   return {
     intent: "reminder",
     title,
-    datetime,
+    datetime: dateTimeDetails.datetime,
     notify_before: notifyBefore,
-    message: buildReminderMessage({ title, notifyBefore, datetime, isRelative })
+    message: buildReminderMessage({ title, notifyBefore, datetime: dateTimeDetails.datetime, isRelative }),
+    time_found: dateTimeDetails.timeFound,
+    time_needs_review: dateTimeDetails.timeNeedsReview,
+    used_default_time: dateTimeDetails.usedDefaultTime
   };
 };
 
@@ -94,7 +97,7 @@ const extractReminderTitle = (text) => {
     .replace(/(bugun|ertaga|indin|indinga)/g, " ")
     .replace(/(dushanba|seshanba|chorshanba|payshanba|juma|shanba|yakshanba)/g, " ")
     .replace(/soat\s*\d{1,2}(?::|\.)?\d{0,2}/g, " ")
-    .replace(/\b\d{1,2}:\d{2}\b/g, " ")
+    .replace(/\b\d{1,2}:\d{2}(?:\s*(?:da|ga))?\b/g, " ")
     .replace(/\b\d{1,2}\s*(da|ga)\b/g, " ")
     .replace(/(eslat|eslatma|boraman|ketaman|qilaman|bo'ladi|boladi|uchrashuvim|uchrashuvga|uchrashuvimga|bor|vaqti|keldi)/g, " ")
     .replace(/\s{2,}/g, " ")

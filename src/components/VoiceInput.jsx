@@ -269,6 +269,9 @@ const VoiceInput = ({ value, onChange, onSendText, variant = "default" }) => {
       onChange?.(cleaned);
       await onSendText(cleaned);
       setStatusText("Eslatma qo'shildi.");
+      resetAudio({ clearTranscript: true });
+      setTranscriptPreview("");
+      onChange?.("");
     } catch (error) {
       console.error(error);
       setVoiceError("Matnni yuborib bo'lmadi. Qayta urinib ko'ring.");
@@ -487,4 +490,5 @@ const resolveVoiceError = (error, hasBrowserFallback) => {
 };
 
 export default VoiceInput;
+
 

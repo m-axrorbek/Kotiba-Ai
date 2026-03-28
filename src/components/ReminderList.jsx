@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+﻿import { useTranslation } from "react-i18next";
 import { Trash2, Calendar, Clock, RotateCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useReminderStore } from "../store/useReminderStore";

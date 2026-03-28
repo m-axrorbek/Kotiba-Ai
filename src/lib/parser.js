@@ -12,7 +12,10 @@ export const parseUzbekText = (text) => {
       datetime: item.datetime,
       notify_before: item.notify_before,
       recurrence: "none",
-      message: item.message
+      message: item.message,
+      time_found: item.time_found,
+      time_needs_review: item.time_needs_review,
+      used_default_time: item.used_default_time
     }));
 };
 
